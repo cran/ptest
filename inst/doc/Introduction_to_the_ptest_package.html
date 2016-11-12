@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Yuanhao Lai, Ian McLeod" />
+
+<meta name="date" content="2016-11-11" />
+
+<title>Introduction to the ptest package</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Introduction to the ptest package</h1>
+<h4 class="author"><em>Yuanhao Lai, Ian McLeod</em></h4>
+<h4 class="date"><em>2016-11-11</em></h4>
+
+
+
+<div id="abstract" class="section level2">
+<h2>Abstract</h2>
+<p>This vignette introduces the functionality of the <code>ptest</code> package for fitting harmonic models and detecting the periodicty for short time series.</p>
+</div>
+<div id="motivation" class="section level2">
+<h2>Motivation</h2>
+<p>Currently there are many statistical tests available for detecting the periodicity in microarray gene expression data. However, methods like the Fisher’s g test proposed by <span class="citation">(Wichert, Fokianos, and Strimmer 2004)</span> might fail to detect the periodicity as it only consider the Fourier frequencies, and methods like the robust g test <span class="citation">(Ahdesmäki et al. 2005)</span> lacks of the computational efficiency as the test requires time-consuming Monte Carlo simulations.</p>
+<p>The figure below shows the gene expression measured at 11 hourly intervals for gene ORF06806, which is apparently periodic with period of about 8.4 hours. About 7 other genes (out of 3000 available) show strong periodicity that is not detected by Fisher’s g or other tests in current use for detecting periodicity in time series microarrays <span class="citation">(Wichert, Fokianos, and Strimmer 2004)</span>.</p>
+<pre><code>#&gt; Periodicity tests in short time series</code></pre>
+<div class="figure">
+<img src="data:image/png;base64,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" alt="Gene ORF06806" />
+<p class="caption">Gene ORF06806</p>
+</div>
+<p>We introduce <code>ptest</code> as an efficient and elementary tool for modeling and testing periodicity in short time series, which aims to deal with the above obstacles. It includes serveral periodicity tests, whose p-value can be obtained instantly and accurately by the response surface regression (RSR) method <span class="citation">(MacKinnon 2000)</span>. It also includes a likelihood ratio test based on the harmonic regression model with the estimated frequency searched among <span class="math inline">\(\mathcal{E}_{n}=\{ j/101\mid j=1,\dots,50\wedge j/101\ge1/n\}\)</span>, which allows for detecting both Fourier frequencies and the non-Fourier frequencies.</p>
+</div>
+<div id="harmonic-model" class="section level2">
+<h2>Harmonic model</h2>
+<p>For the introduced methods, we assume there are no missing values in the data and the model for the periodic time series is, <span class="math display">\[z_{t}=\mu+A\cos(2\pi\lambda t)+B\sin(2\pi\lambda t)+\varepsilon_{t},\ t=1,...,n,\]</span></p>
+<p>where <span class="math inline">\(\epsilon_{t}\)</span> is an i.i.d. noise sequence with mean 0 and variance <span class="math inline">\(\sigma^{2}\)</span>, the frequency <span class="math inline">\(\lambda\)</span> of the sinusoidal wave is restricted to the range <span class="math inline">\(0\le\lambda\le0.5\)</span> to avoid the aliasing (indeterminacy) the sinusoidal function, <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> are some constants.</p>
+<p>Our objective is to perform a hypothesis test for detecting the periodicity, <span class="math display">\[\text{H}_{0}:\lambda=0\ \text{versus}\ \text{H}_{1}:\lambda&gt;0.\]</span></p>
+<div id="fitting-harmonic-models-with-ptest" class="section level3">
+<h3>Fitting harmonic models with <code>ptest</code></h3>
+<p>The function <code>fitHReg()</code> provides maximum likelihood estimations (MLE) for fitting the harmonic model. The default maximization of the likelihood is performed by the enumerative algorithm but an exact non-linear least square option is also provided. Here is a brief example to do the estimations (See below).</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#simulate a harmonic series</span>
+<span class="kw">set.seed</span>(<span class="dv">193</span>)
+<span class="co">#Non-Fourier frequency</span>
+z &lt;-<span class="st"> </span><span class="kw">simHReg</span>(<span class="dt">n =</span> <span class="dv">14</span>, <span class="dt">f=</span><span class="dv">2</span>/<span class="dv">10</span>, <span class="dt">A =</span> <span class="dv">2</span>, <span class="dt">B =</span> <span class="dv">1</span>, <span class="dt">model=</span><span class="st">&quot;Gaussian&quot;</span>,<span class="dt">sig=</span><span class="dv">1</span>) 
+<span class="kw">fitHReg</span>(z,<span class="dt">algorithm=</span><span class="st">&quot;enumerative&quot;</span>) 
+<span class="co">#&gt; $coefficients</span>
+<span class="co">#&gt;        mu         A         B </span>
+<span class="co">#&gt; 0.2930025 2.2207896 0.5829751 </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $residuals</span>
+<span class="co">#&gt;            1            2            3            4            5 </span>
+<span class="co">#&gt;  0.086619003 -0.432458497  0.901698244 -0.740022388  0.002371533 </span>
+<span class="co">#&gt;            6            7            8            9           10 </span>
+<span class="co">#&gt; -1.416528621 -0.199844613  0.401282041  0.136717738  0.343483073 </span>
+<span class="co">#&gt;           11           12           13           14 </span>
+<span class="co">#&gt;  1.194367583  0.542615248 -0.884524542  0.064224200 </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $Rsq</span>
+<span class="co">#&gt; [1] 0.8428944</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $fstatistic</span>
+<span class="co">#&gt;    value    numdf    dendf </span>
+<span class="co">#&gt; 29.50829  2.00000 11.00000 </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $sigma</span>
+<span class="co">#&gt; [1] 0.7631791</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $freq</span>
+<span class="co">#&gt; [1] 0.1980198</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $LRStat</span>
+<span class="co">#&gt; [1] 25.91172</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; attr(,&quot;class&quot;)</span>
+<span class="co">#&gt; [1] &quot;HReg&quot;</span>
+<span class="kw">fitHReg</span>(z,<span class="dt">algorithm =</span> <span class="st">&quot;exact&quot;</span>) 
+<span class="co">#&gt; $coefficients</span>
+<span class="co">#&gt;        mu         A         B </span>
+<span class="co">#&gt; 0.3292958 2.3115821 0.1579380 </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $residuals</span>
+<span class="co">#&gt;          1          2          3          4          5          6 </span>
+<span class="co">#&gt;  0.3744325 -0.2111299  0.7795052 -0.9979541 -0.1007008 -1.3723056 </span>
+<span class="co">#&gt;          7          8          9         10         11         12 </span>
+<span class="co">#&gt; -0.1745866  0.3832477  0.1481103  0.3270874  1.0308152  0.3339204 </span>
+<span class="co">#&gt;         13         14 </span>
+<span class="co">#&gt; -0.8603981  0.3399565 </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $Rsq</span>
+<span class="co">#&gt; [1] 0.8524324</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $fstatistic</span>
+<span class="co">#&gt;    value    numdf    dendf </span>
+<span class="co">#&gt; 31.77105  2.00000 11.00000 </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $sigma</span>
+<span class="co">#&gt; [1] 0.7396498</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $freq</span>
+<span class="co">#&gt;    lambda </span>
+<span class="co">#&gt; 0.1943304 </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $LRStat</span>
+<span class="co">#&gt; [1] 26.78856</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; attr(,&quot;class&quot;)</span>
+<span class="co">#&gt; [1] &quot;HReg&quot;</span></code></pre></div>
+<p>The recommended package boot may be used with fitHReg() to perform a bootstrap significance test for periodicity.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#Bootstrap the series under the null hypothesis: No periodicity </span>
+<span class="kw">set.seed</span>(<span class="dv">193</span>)
+<span class="kw">library</span>(boot)
+LRStat &lt;-<span class="st"> </span>function(d, i){    
+  <span class="kw">fitHReg</span>(d[i],<span class="dt">algorithm =</span> <span class="st">&quot;enumerative&quot;</span>)$LRStat
+}
+bootResult &lt;-<span class="st"> </span><span class="kw">boot</span>(<span class="dt">data =</span> z, <span class="dt">statistic =</span> LRStat, <span class="dt">R =</span> <span class="dv">1000</span>)
+bootResult
+<span class="co">#&gt; </span>
+<span class="co">#&gt; ORDINARY NONPARAMETRIC BOOTSTRAP</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; Call:</span>
+<span class="co">#&gt; boot(data = z, statistic = LRStat, R = 1000)</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; Bootstrap Statistics :</span>
+<span class="co">#&gt;     original    bias    std. error</span>
+<span class="co">#&gt; t1* 25.91172 -16.83044    3.292104</span>
+<span class="co">#Compute the p-value</span>
+<span class="kw">mean</span>(bootResult$t&gt;=<span class="kw">fitHReg</span>(z,<span class="dt">algorithm=</span><span class="st">&quot;enumerative&quot;</span>)$LRStat) <span class="co">#0.001</span>
+<span class="co">#&gt; [1] 0.001</span></code></pre></div>
+</div>
+</div>
+<div id="methods-for-detecting-periodicity" class="section level2">
+<h2>Methods for detecting periodicity</h2>
+<p>In order to detect whether the series is periodic or not, <code>ptest</code> provides two kinds of tests using the function <code>ptestReg()</code> and the function <code>ptestg()</code>. <code>ptestReg()</code> use likelihood ratio tests under the Gaussian or the Laplace assumptions, while <code>ptestg()</code> provides three methods based on the periodograms. Both methods are implemented with the RSR method implemented for efficiently obtaining accurate p-values.</p>
+<div id="likelihood-ratio-tests-using-ptestreg" class="section level3">
+<h3>Likelihood ratio tests using <code>ptestReg()</code></h3>
+<p><code>ptestReg()</code> performs two kinds of likelihood ratio tests based on two different assumptions (Gaussian or Laplace) and the p-value computation is efficiently improved by the RSR method. Hence the p-value of the test can be instantly obtained without doing a Monte Carlo simulation and the precision is better than doing limited time of Monte Carlo simualtions in a personal computer. Here is a brief example.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">ptestReg</span>(z,<span class="dt">method =</span> <span class="st">&quot;LS&quot;</span>) <span class="co">#Normal likelihood ratio test</span>
+<span class="co">#&gt; $obsStat</span>
+<span class="co">#&gt; [1] 25.91172</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $pvalue</span>
+<span class="co">#&gt;          1 </span>
+<span class="co">#&gt; 0.00107849 </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $freq</span>
+<span class="co">#&gt; [1] 0.1980198</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; attr(,&quot;class&quot;)</span>
+<span class="co">#&gt; [1] &quot;Htest&quot;</span>
+<span class="kw">ptestReg</span>(z,<span class="dt">method =</span> <span class="st">&quot;L1&quot;</span>) <span class="co">#Laplace likelihood ratio test </span>
+<span class="co">#&gt; $obsStat</span>
+<span class="co">#&gt; [1] 13.91677</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $pvalue</span>
+<span class="co">#&gt;           1 </span>
+<span class="co">#&gt; 0.002480358 </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $freq</span>
+<span class="co">#&gt; [1] 0.1980198</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; attr(,&quot;class&quot;)</span>
+<span class="co">#&gt; [1] &quot;Htest&quot;</span></code></pre></div>
+</div>
+<div id="periodogram-based-tests-using-ptestg" class="section level3">
+<h3>Periodogram-based tests using <code>ptestg</code></h3>
+The g statistic was initially proposed by <span class="citation">(Fisher 1929)</span> and is used to test the periodicity in microarray data in <span class="citation">(Wichert, Fokianos, and Strimmer 2004)</span>. It is defined as a ratio of the maximum periodogram to the summation of all periodograms evaluated at the Fourier frequencies,
+\begin{equation}
+g=\frac{\max_{j}I(\lambda_{j})}{\sum_{j=1}^{m}I(\lambda_{j})},\label{eq:g-statistic}
+\end{equation}
+<p>where <span class="math inline">\(m\)</span> is <span class="math inline">\((n-1)/2\)</span> or <span class="math inline">\((n-2)/2\)</span> according to <span class="math inline">\(n\)</span> is odd or even and <span class="math inline">\(I(\lambda_{j})\)</span> is the periodogram evaluated at the Fourier frequencies <span class="math inline">\(\lambda_{j}=j/n\)</span>, <span class="math inline">\(j=1,...,[n/2]\)</span> and <span class="math inline">\([x]\)</span> denotes the integer part of x.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">ptestg</span>(z,<span class="dt">method=</span><span class="st">&quot;Fisher&quot;</span>)
+<span class="co">#&gt; $obsStat</span>
+<span class="co">#&gt; [1] 0.6388557</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $pvalue</span>
+<span class="co">#&gt; [1] 0.03685997</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $freq</span>
+<span class="co">#&gt; [1] 0.2142857</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; attr(,&quot;class&quot;)</span>
+<span class="co">#&gt; [1] &quot;Htest&quot;</span></code></pre></div>
+<p>The other two periodogram-based tests are the modifications of the Fisher’s g test. For the robust g test prposed by <span class="citation">(Ahdesmäki et al. 2005)</span>, it replaces periodogram spectral estimator with an alternative rank-based robust estimator. The original robust g test staitstic is evaluated by enlarging twice the searching region of the fourier frequencies, but we also made an alternative option that the evaluated frequencies are <span class="math inline">\(\cal{E}_{n}\)</span>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">ptestg</span>(z,<span class="dt">method=</span><span class="st">&quot;robust&quot;</span>)
+<span class="co">#&gt; $obsStat</span>
+<span class="co">#&gt; [1] 0.3570414</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $pvalue</span>
+<span class="co">#&gt;          1 </span>
+<span class="co">#&gt; 0.03395255 </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $freq</span>
+<span class="co">#&gt; [1] 0.1785714</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; attr(,&quot;class&quot;)</span>
+<span class="co">#&gt; [1] &quot;Htest&quot;</span>
+<span class="co">#extend the frequency searching region to be En</span>
+<span class="kw">ptestg</span>(z,<span class="dt">method=</span><span class="st">&quot;extendedRobust&quot;</span>)
+<span class="co">#&gt; $obsStat</span>
+<span class="co">#&gt; [1] 0.1115661</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $pvalue</span>
+<span class="co">#&gt;          1 </span>
+<span class="co">#&gt; 0.04370089 </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $freq</span>
+<span class="co">#&gt; [1] 0.1980198</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; attr(,&quot;class&quot;)</span>
+<span class="co">#&gt; [1] &quot;Htest&quot;</span></code></pre></div>
+<p>For the extended Fisher’g test statistic, it simply extends the Fisher’s g test by enlarging the searching region of the frequency from the fourier frequencies to <span class="math inline">\(\mathcal{E}_{n}\)</span>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">ptestg</span>(z,<span class="dt">method=</span><span class="st">&quot;extended&quot;</span>)
+<span class="co">#&gt; $obsStat</span>
+<span class="co">#&gt; [1] 0.1107367</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $pvalue</span>
+<span class="co">#&gt;          1 </span>
+<span class="co">#&gt; 0.03785992 </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $freq</span>
+<span class="co">#&gt; [1] 0.1980198</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; attr(,&quot;class&quot;)</span>
+<span class="co">#&gt; [1] &quot;Htest&quot;</span></code></pre></div>
+</div>
+</div>
+<div id="motivating-examples" class="section level2">
+<h2>Motivating Examples</h2>
+<p>Here we introduce some examples to stress the superiority of <code>ptest</code>.</p>
+<div id="efficiency-with-the-response-surface-regression-method" class="section level3">
+<h3>Efficiency with the response surface regression method</h3>
+<p>To see the efficiency of <code>ptest</code>, we compare the computation time of the robust g test in the <code>GeneCycle</code> package and the the robust g test in <code>ptest</code>. Here is the result on a single local machine with two cores Intel(R) Core(TM) i7-4500U CPU @ 1.80 GHz 2.40 GHz, Windows 10 64-bit system, and R 3.3.1. Notice that here we only present the computation time of <code>GeneCycle</code> based on <span class="math inline">\(10^5\)</span> MC simulations, which is also the original set-up. But to achieve the same accuracy as the RSR method, it needs <span class="math inline">\(200\times 10^5\)</span> simulations, which is the simulation times used in the RSR method for the robust g in <code>ptest</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Effiency Comparison for testing 10^5 series with length 20</span>
+<span class="kw">set.seed</span>(<span class="dv">193</span>)
+X &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">rnorm</span>(<span class="dv">20</span>*<span class="dv">10</span>^<span class="dv">5</span>),<span class="dt">nrow =</span> <span class="dv">10</span>)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## MC method for the robust g test
+<span class="kw">library</span>(GeneCycle)
+<span class="co"># # The original robust g test performs 10^5 MC simualtions,</span>
+<span class="co"># # but we need 100*10^5 to achieve the same accuracy as </span>
+<span class="co"># # the RSR method.</span>
+<span class="co"># # This process is time-consuming.</span>
+<span class="co"># t1 &lt;- proc.time()</span>
+<span class="co"># RX &lt;- robust.spectrum(X)</span>
+<span class="co"># pval1 &lt;- robust.g.test(RX)</span>
+<span class="co"># t1 &lt;- proc.time()-t1</span>
+<span class="co"># </span>
+<span class="co"># t1 </span>
+##&gt;    user  system elapsed 
+##&gt;  343.42    2.09  348.78
+<span class="co">#unlink(&quot;g_pop_length_10.txt&quot;) # delete the external files </span></code></pre></div>
+<p>hence for achieving the same accuracy as the below robust g test with the RSR method, it takes <span class="math inline">\(348.78\times 200/3600 \ \text{hours} = 19.4\ \text{hours}\)</span>. Moreover, the memory needed is 99kb and hence the memory needed for the whole simulation will be almost 1GB. Fortunately, with the help of the RSR methods, those time-consuming simulations can be skipped.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## RSR method for the robust g test
+<span class="kw">library</span>(ptest)
+t2 &lt;-<span class="st"> </span><span class="kw">proc.time</span>()
+pval2 &lt;-<span class="st"> </span><span class="kw">ptestg</span>(X,<span class="dt">method=</span><span class="st">&quot;robust&quot;</span>,<span class="dt">multiple =</span> <span class="ot">TRUE</span>)
+t2 &lt;-<span class="st"> </span><span class="kw">proc.time</span>()-t2
+
+t2 
+ <span class="co">#   user system  elapsed </span>
+ <span class="co"># 208.97   0.17  218.42 </span></code></pre></div>
+</div>
+<div id="accuracy-with-the-response-surface-regression-method" class="section level3">
+<h3>Accuracy with the response surface regression method</h3>
+<p>To see the accuracy of computed p-values from the RSR method, the exact cumulative distribution function of the Fisher’s g is compared to its cumulative distribution function derived from the RSR method. For this experimental purpose, <code>ptestg()</code> provides an option for computing the p-value of the Fisher’g test with the RSR method.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#For a series of length 10, it is by the definition of the g statistic that </span>
+<span class="co">#the range of g should be between 1/n and 1.</span>
+n &lt;-<span class="st"> </span><span class="dv">10</span>
+g &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="fl">0.01</span>,<span class="fl">0.99</span>,<span class="dt">length.out =</span> <span class="dv">200</span>)
+
+<span class="co">#Compute the CDF from the exact distribution and the RSR method</span>
+cdfExact &lt;-<span class="st"> </span><span class="kw">pFisherg</span>(g,n,<span class="dt">method=</span><span class="st">&quot;exact&quot;</span>)
+cdfRSR &lt;-<span class="st"> </span><span class="kw">pFisherg</span>(g,n,<span class="dt">method=</span><span class="st">&quot;RSR&quot;</span>)
+
+
+<span class="kw">plot</span>(g,cdfExact,<span class="dt">col=</span><span class="st">&quot;red&quot;</span>,<span class="dt">type=</span><span class="st">&quot;l&quot;</span>, <span class="dt">cex=</span><span class="fl">1.2</span>,
+     <span class="dt">main =</span> <span class="st">&quot;Compare the exact CDF and the RSR CDF for Fisher's g (n=10)&quot;</span>)
+<span class="kw">lines</span>(g,cdfRSR,<span class="dt">col=</span><span class="st">&quot;blue&quot;</span>,<span class="dt">type=</span><span class="st">&quot;b&quot;</span>,<span class="dt">pch=</span><span class="dv">19</span>,<span class="dt">cex=</span><span class="fl">0.3</span>)
+<span class="kw">legend</span>(<span class="st">&quot;topleft&quot;</span>,<span class="dt">legend =</span> <span class="kw">c</span>(<span class="st">&quot;Exact&quot;</span>,<span class="st">&quot;RSR&quot;</span>), 
+       <span class="dt">col =</span> <span class="kw">c</span>(<span class="st">&quot;red&quot;</span>,<span class="st">&quot;blue&quot;</span>), <span class="dt">lty =</span> <span class="kw">c</span>(<span class="dv">1</span>,<span class="ot">NA</span>),
+       <span class="dt">pch =</span> <span class="kw">c</span>(<span class="ot">NA</span>, <span class="dv">19</span>))</code></pre></div>
+<p><img src="data:image/png;base64,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" alt /><!-- --></p>
+<p>The absolute difference (in log 10 scale) between the exact distribution and the RSR/MC distribution is also shown. MC represents the emiprical distribution obtained from <span class="math inline">\(10^5\)</span> Monte Carlo simulations of the Fisher’s g statistics. Usually this simulation step takes a long time (i.e., the robust g statistic), but since the g statistic is computed efficiently by the Fast Fourier transfomations, doing <span class="math inline">\(10^5\)</span> simulations is still acceptible. The figures shows that the RSR distribution is more accurate than the Monte Carlo method.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">193</span>)
+zsim &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">rnorm</span>(<span class="dv">10</span>*<span class="dv">10</span>^<span class="dv">5</span>),<span class="dt">nrow=</span><span class="dv">10</span>,<span class="dt">ncol=</span><span class="dv">10</span>^<span class="dv">5</span>)
+gSample &lt;-<span class="st"> </span><span class="kw">ptestg</span>(zsim,<span class="dt">method=</span><span class="st">&quot;Fisher&quot;</span>,<span class="dt">multiple =</span> <span class="ot">TRUE</span>)$obsStat
+distMC &lt;-<span class="st"> </span><span class="kw">ecdf</span>(gSample)
+cdfMC &lt;-<span class="st"> </span><span class="kw">distMC</span>(g)
+
+<span class="co">#It is not of interest to compare thoes values which are less than 0.00001 </span>
+<span class="co">#or larger than 0.99999 as the 10^6 Monte Carlo simulations here does not </span>
+<span class="co">#enable a reliable estimation for them.</span>
+pos &lt;-<span class="st"> </span><span class="kw">which</span>( (cdfExact&gt;=<span class="fl">0.00001</span>)&amp;(cdfExact&lt;=<span class="fl">0.99999</span>) )
+diff1 &lt;-<span class="st"> </span><span class="kw">log</span>(<span class="kw">abs</span>(cdfExact[pos]-cdfRSR[pos]),<span class="dt">base =</span> <span class="dv">10</span>)
+diff2 &lt;-<span class="st"> </span><span class="kw">log</span>(<span class="kw">abs</span>(cdfExact[pos]-cdfMC[pos]),<span class="dt">base =</span> <span class="dv">10</span>)
+comFig &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">cdfExact =</span> cdfExact[pos],
+                     <span class="dt">diff=</span><span class="kw">c</span>(diff1,diff2),
+                     <span class="dt">type=</span><span class="kw">rep</span>(<span class="kw">c</span>(<span class="st">&quot;RSR v.s. Exact&quot;</span>,<span class="st">&quot;MC v.s. Exact&quot;</span>),
+                              <span class="dt">each=</span><span class="kw">length</span>(diff1)))
+
+<span class="kw">library</span>(lattice)
+<span class="co">#&gt; </span>
+<span class="co">#&gt; Attaching package: 'lattice'</span>
+<span class="co">#&gt; The following object is masked from 'package:boot':</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt;     melanoma</span>
+ans &lt;-<span class="st"> </span><span class="kw">xyplot</span>(diff ~<span class="st"> </span>cdfExact |<span class="st"> </span>type, <span class="dt">data=</span>comFig,
+       <span class="dt">panel=</span>function(x,y){
+        <span class="kw">panel.grid</span>(<span class="dt">h=</span><span class="dv">4</span>, <span class="dt">v=</span> <span class="dv">4</span>,<span class="dt">col=</span><span class="kw">rgb</span>(<span class="fl">0.5</span>,<span class="fl">0.5</span>,<span class="fl">0.5</span>,<span class="fl">0.5</span>))
+        <span class="kw">panel.xyplot</span>(x, y, <span class="dt">pch=</span><span class="dv">16</span>,<span class="dt">cex=</span><span class="fl">0.7</span>)
+       }, <span class="dt">ylab=</span><span class="st">&quot;Absolute diference (log10)&quot;</span>, <span class="dt">xlab=</span><span class="st">&quot;g&quot;</span>)
+ans</code></pre></div>
+<div class="figure">
+<img src="data:image/png;base64,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" alt="Absolute difference between CDFs" />
+<p class="caption">Absolute difference between CDFs</p>
+</div>
+</div>
+<div id="might-fail-to-detect-non-fourier-periodicities" class="section level3">
+<h3>Might fail to detect non-fourier periodicities</h3>
+<p>Let’s come back to the example of gene ORF06806. It is apparently periodic with period of about 8.4 hours, approximately with a non-Fourier frequency <span class="math inline">\(1/8.4 = 0.1190\)</span>. But the Fisher’s g failed to detect this periodicity.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">data</span>(Cc)
+x &lt;-<span class="st"> </span>Cc[<span class="kw">which</span>(<span class="kw">rownames</span>(Cc)==<span class="st">&quot;ORF06806&quot;</span>),]
+<span class="kw">plot</span>(<span class="dv">1</span>:<span class="kw">length</span>(x),x,<span class="dt">type=</span><span class="st">&quot;b&quot;</span>,
+     <span class="dt">xlab=</span><span class="st">&quot;time&quot;</span>,<span class="dt">ylab=</span><span class="st">&quot;Gene expression&quot;</span>)</code></pre></div>
+<div class="figure">
+<img src="data:image/png;base64,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" alt="Gene ORF06806" />
+<p class="caption">Gene ORF06806</p>
+</div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">ptestg</span>(x,<span class="dt">method=</span><span class="st">&quot;Fisher&quot;</span>) <span class="co">#Fail to detect</span>
+<span class="co">#&gt; $obsStat</span>
+<span class="co">#&gt; [1] 0.6067813</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $pvalue</span>
+<span class="co">#&gt; [1] 0.1195382</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $freq</span>
+<span class="co">#&gt; [1] 0.09090909</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; attr(,&quot;class&quot;)</span>
+<span class="co">#&gt; [1] &quot;Htest&quot;</span>
+<span class="kw">ptestg</span>(x,<span class="dt">method=</span><span class="st">&quot;robust&quot;</span>)
+<span class="co">#&gt; $obsStat</span>
+<span class="co">#&gt; [1] 0.4659265</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $pvalue</span>
+<span class="co">#&gt;           1 </span>
+<span class="co">#&gt; 0.008630823 </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $freq</span>
+<span class="co">#&gt; [1] 0.1363636</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; attr(,&quot;class&quot;)</span>
+<span class="co">#&gt; [1] &quot;Htest&quot;</span>
+<span class="kw">ptestg</span>(x,<span class="dt">method=</span><span class="st">&quot;extended&quot;</span>)
+<span class="co">#&gt; $obsStat</span>
+<span class="co">#&gt; [1] 0.1194861</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $pvalue</span>
+<span class="co">#&gt;          1 </span>
+<span class="co">#&gt; 0.02176852 </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $freq</span>
+<span class="co">#&gt; [1] 0.1287129</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; attr(,&quot;class&quot;)</span>
+<span class="co">#&gt; [1] &quot;Htest&quot;</span>
+<span class="kw">ptestReg</span>(x,<span class="dt">method=</span><span class="st">&quot;LS&quot;</span>)
+<span class="co">#&gt; $obsStat</span>
+<span class="co">#&gt; [1] 31.42167</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $pvalue</span>
+<span class="co">#&gt;            1 </span>
+<span class="co">#&gt; 0.0003234099 </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $freq</span>
+<span class="co">#&gt; [1] 0.1188119</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; attr(,&quot;class&quot;)</span>
+<span class="co">#&gt; [1] &quot;Htest&quot;</span>
+<span class="kw">ptestReg</span>(x,<span class="dt">method=</span><span class="st">&quot;L1&quot;</span>)
+<span class="co">#&gt; $obsStat</span>
+<span class="co">#&gt; [1] 17.57679</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $pvalue</span>
+<span class="co">#&gt;            1 </span>
+<span class="co">#&gt; 0.0003295722 </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $freq</span>
+<span class="co">#&gt; [1] 0.1287129</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; attr(,&quot;class&quot;)</span>
+<span class="co">#&gt; [1] &quot;Htest&quot;</span>
+
+
+X &lt;-<span class="st"> </span>Cc[<span class="kw">complete.cases</span>(Cc),]
+pvalue &lt;-<span class="st"> </span><span class="kw">ptestg</span>(<span class="kw">t</span>(X),<span class="dt">method=</span><span class="st">&quot;Fisher&quot;</span>,<span class="dt">multiple =</span> <span class="ot">TRUE</span>)
+
+<span class="kw">head</span>(<span class="kw">sort</span>(pvalue$pvalue))
+<span class="co">#&gt; [1] 2.034930e-05 2.682115e-05 6.673249e-05 7.087520e-05 9.244960e-05</span>
+<span class="co">#&gt; [6] 9.574902e-05</span></code></pre></div>
+</div>
+</div>
+<div id="reference" class="section level2 unnumbered">
+<h2>Reference</h2>
+<div id="refs" class="references">
+<div id="ref-ahdesmaki2005robust">
+<p>Ahdesmäki, Miika, Harri Lähdesmäki, Ron Pearson, Heikki Huttunen, and Olli Yli-Harja. 2005. “Robust Detection of Periodic Time Series Measured from Biological Systems.” <em>BMC Bioinformatics</em> 6 (1). BioMed Central Ltd: 117.</p>
+</div>
+<div id="ref-fisher1929tests">
+<p>Fisher, Ronald Aylmer. 1929. “Tests of Significance in Harmonic Analysis.” <em>Proceedings of the Royal Society of London. Series A, Containing Papers of a Mathematical and Physical Character</em>. JSTOR, 54–59.</p>
+</div>
+<div id="ref-mackinnon2000computing">
+<p>MacKinnon, James G. 2000. “Computing Numerical Distribution Functions in Econometrics.” In <em>High Performance Computing Systems and Applications</em>, 455–71. Springer.</p>
+</div>
+<div id="ref-Wichert01012004">
+<p>Wichert, Sofia, Konstantinos Fokianos, and Korbinian Strimmer. 2004. “Identifying Periodically Expressed Transcripts in Microarray Time Series Data.” <em>Bioinformatics</em> 20 (1): 5–20. doi:<a href="https://doi.org/10.1093/bioinformatics/btg364">10.1093/bioinformatics/btg364</a>.</p>
+</div>
+</div>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

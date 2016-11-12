@@ -1,0 +1,16 @@
+useDynLib("ptest")
+importFrom('quantreg', rq.fit.br)
+# Export all names
+#exportPattern(".")
+export(simHReg)
+export(fitHReg)
+export(ptestReg)
+export(ptestg)
+export(pgram)
+export(pFisherg)
+export(GetFitFisherG)
+importFrom("graphics", "lines", "plot", "points")
+importFrom("stats", "approxfun", "coef", "cor", "fft", "lm", "median",
+             "var","residuals", "rnorm", "rt", "runif","loess", "loess.control", 
+             "nls", "pnorm","predict", "qnorm")
+importFrom("utils", "data")

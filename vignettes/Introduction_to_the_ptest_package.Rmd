@@ -1,0 +1,277 @@
+---
+title: "Introduction to the ptest package"
+author: "Yuanhao Lai, Ian McLeod"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+bibliography: ptest.bib
+vignette: >
+  %\VignetteIndexEntry{Introduction to the ptest package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, echo = FALSE, message = FALSE}
+knitr::opts_chunk$set(collapse = T, comment = "#>")
+options(tibble.print_min = 4L, tibble.print_max = 4L)
+```
+
+## Abstract
+
+This vignette introduces the functionality of the `ptest` package for 
+fitting harmonic models and detecting the periodicty for short time series. 
+
+## Motivation
+
+Currently there are many statistical tests available for detecting the periodicity in microarray gene expression data. 
+However, methods like the Fisher’s g test proposed by [@Wichert01012004] might fail to detect the periodicity as it only consider the Fourier frequencies, and methods like the robust g test [@ahdesmaki2005robust] lacks of the computational efficiency as the test requires time-consuming Monte Carlo simulations. 
+
+The figure below shows the gene expression measured at 11 hourly intervals for gene ORF06806, which is apparently periodic with period of about 8.4 hours. 
+About 7 other genes (out of 3000 available) show strong periodicity that is not detected by Fisher's g or other tests in current use for detecting periodicity in time series microarrays [@Wichert01012004].
+
+```{r Motivation, fig.cap="Gene ORF06806",fig.width=5,fig.height=3,echo=FALSE}
+library(ptest)
+data(Cc)
+x <- Cc[which(rownames(Cc)=="ORF06806"),]
+
+plot(1:length(x),x,type="b",
+     xlab="time",ylab="Gene expression")
+```
+
+We introduce `ptest` as an efficient and elementary tool for modeling and testing periodicity in short time series, which aims to deal with the above obstacles. 
+It includes serveral periodicity tests, whose p-value can be obtained instantly and accurately by the response surface regression (RSR) method [@mackinnon2000computing]. 
+It also includes a likelihood ratio test based on the harmonic regression model with the estimated frequency searched among $\mathcal{E}_{n}=\{ j/101\mid j=1,\dots,50\wedge j/101\ge1/n\}$, which allows for detecting both Fourier frequencies and the non-Fourier frequencies.
+
+## Harmonic model
+For the introduced methods, we assume there are no missing values in the data and the model for the periodic time series is,
+$$z_{t}=\mu+A\cos(2\pi\lambda t)+B\sin(2\pi\lambda t)+\varepsilon_{t},\ t=1,...,n,$$
+
+where $\epsilon_{t}$ is an i.i.d. noise sequence with mean 0 and
+variance $\sigma^{2}$, the frequency $\lambda$ of the sinusoidal
+wave is restricted to the range $0\le\lambda\le0.5$ to avoid the
+aliasing (indeterminacy) the sinusoidal function, $A$ and $B$ are some constants.
+
+Our objective is to perform a hypothesis test for detecting the periodicity,
+$$\text{H}_{0}:\lambda=0\ \text{versus}\ \text{H}_{1}:\lambda>0.$$
+
+
+### Fitting harmonic models with `ptest`
+
+The function `fitHReg()` provides maximum likelihood estimations (MLE) for fitting the harmonic model. 
+The default maximization of the likelihood is performed by the enumerative algorithm but an exact non-linear least square option is also provided.
+Here is a brief example to do the estimations (See below). 
+
+```{r Fit harmonic}
+#simulate a harmonic series
+set.seed(193)
+#Non-Fourier frequency
+z <- simHReg(n = 14, f=2/10, A = 2, B = 1, model="Gaussian",sig=1) 
+fitHReg(z,algorithm="enumerative") 
+fitHReg(z,algorithm = "exact") 
+```
+
+The recommended package boot may be used with fitHReg() to perform a bootstrap significance test for periodicity.
+
+```{r boot test}
+#Bootstrap the series under the null hypothesis: No periodicity 
+set.seed(193)
+library(boot)
+LRStat <- function(d, i){    
+  fitHReg(d[i],algorithm = "enumerative")$LRStat
+}
+bootResult <- boot(data = z, statistic = LRStat, R = 1000)
+bootResult
+#Compute the p-value
+mean(bootResult$t>=fitHReg(z,algorithm="enumerative")$LRStat) #0.001
+
+```
+
+## Methods for detecting periodicity 
+
+In order to detect whether the series is periodic or not, `ptest` provides two kinds of tests using the function `ptestReg()` and the function `ptestg()`. 
+`ptestReg()` use likelihood ratio tests under the Gaussian or the Laplace assumptions, while `ptestg()` provides three methods based on the periodograms. 
+Both methods are implemented with the RSR method implemented for efficiently obtaining accurate p-values.
+
+### Likelihood ratio tests using `ptestReg()` 
+`ptestReg()` performs two kinds of likelihood ratio tests based on two different assumptions (Gaussian or Laplace) and the p-value computation is efficiently improved by the RSR method.
+Hence the p-value of the test can be instantly obtained without doing a Monte Carlo simulation and the precision is better than doing limited time of Monte Carlo simualtions in a personal computer. 
+Here is a brief example.
+
+```{r -2LLR} 
+ptestReg(z,method = "LS") #Normal likelihood ratio test
+ptestReg(z,method = "L1") #Laplace likelihood ratio test 
+```
+
+### Periodogram-based tests using `ptestg` 
+The g statistic was initially proposed by [@fisher1929tests] and is used to test the periodicity in microarray data in [@Wichert01012004]. 
+It is defined as a ratio of the maximum periodogram to the summation of all periodograms evaluated at the Fourier frequencies,
+\begin{equation}
+g=\frac{\max_{j}I(\lambda_{j})}{\sum_{j=1}^{m}I(\lambda_{j})},\label{eq:g-statistic}
+\end{equation}
+where $m$ is $(n-1)/2$ or $(n-2)/2$ according to $n$ is odd or
+even and $I(\lambda_{j})$ is the periodogram evaluated at the Fourier frequencies $\lambda_{j}=j/n$, $j=1,...,[n/2]$
+and $[x]$ denotes the integer part of x.
+
+```{r Fisher}
+ptestg(z,method="Fisher")
+```
+
+The other two periodogram-based tests are the modifications of the Fisher's g test. 
+For the robust g test prposed by [@ahdesmaki2005robust], it replaces periodogram spectral estimator with an alternative rank-based robust estimator. 
+The original robust g test staitstic is evaluated by enlarging twice the searching region of the fourier frequencies, but we also made an alternative option that the evaluated frequencies are $\cal{E}_{n}$.
+
+```{r rank}
+ptestg(z,method="robust")
+#extend the frequency searching region to be En
+ptestg(z,method="extendedRobust")
+```
+
+For the extended Fisher'g test statistic, it simply extends the Fisher's g test by enlarging the searching region of the frequency from the fourier frequencies to $\mathcal{E}_{n}$.
+
+```{r extend}
+ptestg(z,method="extended")
+```
+
+
+## Motivating Examples
+Here we introduce some examples to stress the superiority of `ptest`.
+
+### Efficiency with the response surface regression method
+To see the efficiency of `ptest`, we compare the computation time of the robust g test in the `GeneCycle` package and the the robust g test in `ptest`. 
+Here is the result on a single local machine with two cores Intel(R) Core(TM) i7-4500U CPU @ 1.80 GHz 2.40 GHz, Windows 10 64-bit system, and R 3.3.1.
+Notice that here we only present the computation time of `GeneCycle` based on $10^5$ MC simulations, which is also the original set-up. 
+But to achieve the same accuracy as the RSR method, it needs $200\times 10^5$ simulations, which is the simulation times used in the RSR method for the robust g in `ptest`.
+
+```{r sim}
+# Effiency Comparison for testing 10^5 series with length 20
+set.seed(193)
+X <- matrix(rnorm(20*10^5),nrow = 10)
+```
+```{r GeneCycle,eval=FALSE}
+## MC method for the robust g test
+library(GeneCycle)
+# # The original robust g test performs 10^5 MC simualtions,
+# # but we need 100*10^5 to achieve the same accuracy as 
+# # the RSR method.
+# # This process is time-consuming.
+# t1 <- proc.time()
+# RX <- robust.spectrum(X)
+# pval1 <- robust.g.test(RX)
+# t1 <- proc.time()-t1
+# 
+# t1 
+##>    user  system elapsed 
+##>  343.42    2.09  348.78
+#unlink("g_pop_length_10.txt") # delete the external files 
+```
+hence for achieving the same accuracy as the below robust g test with the RSR method, it takes $348.78\times 200/3600 \ \text{hours} = 19.4\ \text{hours}$. 
+Moreover, the memory needed is 99kb and hence the memory needed for the whole simulation will be almost 1GB. Fortunately, with the help of the RSR methods, those time-consuming simulations can be skipped. 
+
+```{r RSR,eval=FALSE}
+## RSR method for the robust g test
+library(ptest)
+t2 <- proc.time()
+pval2 <- ptestg(X,method="robust",multiple = TRUE)
+t2 <- proc.time()-t2
+
+t2 
+ #   user system  elapsed 
+ # 208.97   0.17  218.42 
+```
+
+### Accuracy with the response surface regression method
+To see the accuracy of computed p-values from the RSR method, the exact cumulative distribution function of 
+the Fisher's g is compared to its cumulative distribution function derived from the RSR method.
+For this experimental purpose, `ptestg()` provides an option for computing the p-value of 
+the Fisher'g test with the RSR method.
+
+```{r CDFFisherG, fig.show='hold', fig.width=7, fig.height=3.6}
+#For a series of length 10, it is by the definition of the g statistic that 
+#the range of g should be between 1/n and 1.
+n <- 10
+g <- seq(0.01,0.99,length.out = 200)
+
+#Compute the CDF from the exact distribution and the RSR method
+cdfExact <- pFisherg(g,n,method="exact")
+cdfRSR <- pFisherg(g,n,method="RSR")
+
+
+plot(g,cdfExact,col="red",type="l", cex=1.2,
+     main = "Compare the exact CDF and the RSR CDF for Fisher's g (n=10)")
+lines(g,cdfRSR,col="blue",type="b",pch=19,cex=0.3)
+legend("topleft",legend = c("Exact","RSR"), 
+       col = c("red","blue"), lty = c(1,NA),
+       pch = c(NA, 19))
+
+```
+
+The absolute difference (in log 10 scale) between the exact distribution and the RSR/MC distribution is also shown. MC represents the emiprical distribution obtained from $10^5$ Monte Carlo simulations of the Fisher's g statistics. Usually this simulation step takes a long time (i.e., the robust g statistic), but since the g statistic is computed efficiently by the Fast Fourier transfomations, doing $10^5$ simulations is still acceptible. The figures shows that the RSR distribution is more accurate than the Monte Carlo method. 
+
+```{r, fig.width=8.1, fig.height=4,fig.cap="Absolute difference between CDFs"}
+set.seed(193)
+zsim <- matrix(rnorm(10*10^5),nrow=10,ncol=10^5)
+gSample <- ptestg(zsim,method="Fisher",multiple = TRUE)$obsStat
+distMC <- ecdf(gSample)
+cdfMC <- distMC(g)
+
+#It is not of interest to compare thoes values which are less than 0.00001 
+#or larger than 0.99999 as the 10^6 Monte Carlo simulations here does not 
+#enable a reliable estimation for them.
+pos <- which( (cdfExact>=0.00001)&(cdfExact<=0.99999) )
+diff1 <- log(abs(cdfExact[pos]-cdfRSR[pos]),base = 10)
+diff2 <- log(abs(cdfExact[pos]-cdfMC[pos]),base = 10)
+comFig <- data.frame(cdfExact = cdfExact[pos],
+                     diff=c(diff1,diff2),
+                     type=rep(c("RSR v.s. Exact","MC v.s. Exact"),
+                              each=length(diff1)))
+
+library(lattice)
+ans <- xyplot(diff ~ cdfExact | type, data=comFig,
+       panel=function(x,y){
+        panel.grid(h=4, v= 4,col=rgb(0.5,0.5,0.5,0.5))
+        panel.xyplot(x, y, pch=16,cex=0.7)
+       }, ylab="Absolute diference (log10)", xlab="g")
+ans
+
+```
+
+```{r,include=FALSE}
+# par(mfrow=c(1,2))
+# plot(g[pos], diff1,
+#      xlab = "g",
+#      ylab = "absolute diference (log10)",
+#      main = "The Exact v.s. RSR",
+#      ylim = c(-7,-2))
+# 
+# plot(g[pos], diff2,
+#      xlab = "g",
+#      ylab = "absolute diference (log10)",
+#      main = "The Exact v.s. MC",
+#      ylim = c(-7,-2))
+# par(mfrow=c(1,1))
+```
+
+### Might fail to detect non-fourier periodicities
+Let's come back to the example of gene ORF06806. It is apparently periodic with period of about 8.4 hours, approximately with a non-Fourier frequency $1/8.4 = 0.1190$. But the Fisher's g failed to detect this periodicity.
+
+```{r Motivation2, fig.cap="Gene ORF06806",fig.width=5,fig.height=3}
+data(Cc)
+x <- Cc[which(rownames(Cc)=="ORF06806"),]
+plot(1:length(x),x,type="b",
+     xlab="time",ylab="Gene expression")
+```
+```{r allTest}
+ptestg(x,method="Fisher") #Fail to detect
+ptestg(x,method="robust")
+ptestg(x,method="extended")
+ptestReg(x,method="LS")
+ptestReg(x,method="L1")
+
+
+X <- Cc[complete.cases(Cc),]
+pvalue <- ptestg(t(X),method="Fisher",multiple = TRUE)
+
+head(sort(pvalue$pvalue))
+
+```
+
+## Reference
